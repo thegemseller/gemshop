@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EssGems</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #facc15; }
+    .gallery { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
+    .card { background: #222; border-radius: 12px; padding: 15px; width: 250px; box-shadow: 0 0 10px #444; }
+    .card img { width: 100%; border-radius: 8px; }
+    .card h2 { margin: 10px 0 5px; color: #38bdf8; }
+    .card p { font-size: 14px; }
+    form { margin-top: 30px; background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin-left: auto; margin-right: auto; }
+    form input, form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: none; }
+    form button { background: #22c55e; padding: 10px; border: none; border-radius: 8px; color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>EssGems 💎</h1>
+
+  <div class="gallery" id="gallery"></div>
+
+  <form id="stoneForm">
+    <h2>Add a New Stone</h2>
+    <input type="text" id="name" placeholder="Stone Name" required />
+    <input type="text" id="image" placeholder="Image URL" required />
+    <textarea id="desc" placeholder="Short Description" rows="3"></textarea>
+    <button type="submit">Add Stone</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('stoneForm');
+    const gallery = document.getElementById('gallery');
+    let stones = JSON.parse(localStorage.getItem('stones')) || [];
+
+    function renderStones() {
+      gallery.innerHTML = '';
+      stones.forEach(stone => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${stone.image}" alt="${stone.name}" />
+          <h2>${stone.name}</h2>
+          <p>${stone.desc}</p>
+        `;
+        gallery.appendChild(card);
+      });
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const image = document.getElementById('image').value;
+      const desc = document.getElementById('desc').value;
+      stones.push({ name, image, desc });
+      localStorage.setItem('stones', JSON.stringify(stones));
+      form.reset();
+      renderStones();
+    });
+
+    renderStones();
+  </script>
+</body>
+</html>
