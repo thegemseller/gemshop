@@ -1,21 +1,101 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EssGems</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EssGems 💎</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #facc15; }
-    .gallery { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
-    .card { background: #222; border-radius: 12px; padding: 15px; width: 250px; box-shadow: 0 0 10px #444; }
-    .card img { width: 100%; border-radius: 8px; }
-    .card h2 { margin: 10px 0 5px; color: #38bdf8; }
-    .card p { font-size: 14px; }
-    form { margin-top: 30px; background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin-left: auto; margin-right: auto; }
-    form input, form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: none; }
-    form button { background: #22c55e; padding: 10px; border: none; border-radius: 8px; color: white; cursor: pointer; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #006400;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #77DD77;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      background: #004d00;
+      border-radius: 12px;
+      padding: 15px;
+      width: 260px;
+      box-shadow: 0 0 10px #000;
+    }
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    .card h2 {
+      margin: 10px 0 5px;
+      color: #77DD77;
+    }
+    .card p,
+    .card span {
+      font-size: 14px;
+    }
+    .seller-email {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .seller-email a {
+      color: #77DD77;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    form {
+      background: #003300;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 500px;
+      margin: 40px auto;
+      color: white;
+    }
+    form input,
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    form button {
+      background: #22c55e;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #loading {
+      display: none;
+      text-align: center;
+    }
+    #loading img {
+      width: 200px;
+      margin-top: 20px;
+    }
+    select {
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    #error {
+      color: red;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -24,41 +104,178 @@
   <div class="gallery" id="gallery"></div>
 
   <form id="stoneForm">
-    <h2>Add a New Stone</h2>
-    <input type="text" id="name" placeholder="Stone Name" required />
-    <input type="text" id="image" placeholder="Image URL" required />
-    <textarea id="desc" placeholder="Short Description" rows="3"></textarea>
-    <button type="submit">Add Stone</button>
+    <h2>Add Your Gem</h2>
+    <div id="error">This image is not appropriate!</div>
+    <input type="text" id="name" placeholder="Gem Name" required />
+    <input type="file" id="imageFile" accept="image/*" required />
+    <textarea id="desc" placeholder="Short Description" rows="3" required></textarea>
+    <input type="number" id="price" placeholder="Price" step="0.01" required />
+    <input type="text" id="emailName" placeholder="Your email (before the @)" required />
+    <select id="emailDomain" required>
+      <option value="@gmail.com">@gmail.com</option>
+      <option value="@icloud.com">@icloud.com</option>
+      <option value="@yahoo.com">@yahoo.com</option>
+    </select>
+    <input type="text" id="currencySearch" placeholder="Search Currency..." />
+    <select id="currency">
+      <option value="United States Dollar">United States Dollar</option>
+    </select>
+    <button type="submit">Submit for Moderation</button>
   </form>
 
+  <div id="loading">
+    <p>Moderating your image, please wait...</p>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAX2oqn4PA0i_3LDBgMHk6YIAyAuMy1g3DQw&s" alt="Loading..." />
+  </div>
+
   <script>
-    const form = document.getElementById('stoneForm');
-    const gallery = document.getElementById('gallery');
-    let stones = JSON.parse(localStorage.getItem('stones')) || [];
+    const form = document.getElementById("stoneForm");
+    const gallery = document.getElementById("gallery");
+    const loading = document.getElementById("loading");
+    const currencySearch = document.getElementById("currencySearch");
+    const currencySelect = document.getElementById("currency");
+    const errorMsg = document.getElementById("error");
+
+    const currencies = [
+      "Euro",
+      "Pound sterling",
+      "New Zealand Dollar",
+      "Swiss Franc",
+      "Australian Dollar",
+      "Jordanian Dinar",
+      "Indian Rupee",
+      "Canadian Dollar",
+      "Chinese Yuan",
+      "Brunei Dollar",
+      "Kuwaiti Dinar",
+      "Cayman Islands Dollar",
+      "Bahraini Dinar",
+      "Gibraltar Pound",
+      "Japanese Yen",
+      "Falkland Islands Pound",
+      "Danish Krone",
+      "Norwegian Krone",
+      "Chilean Peso",
+      "Central African CFA franc",
+      "Hong Kong Dollar",
+      "Singapore Dollar",
+      "East Caribbean Dollar",
+      "Algerian Dinar",
+      "CFP Franc",
+      "West African CFA franc",
+      "Omani Rial",
+      "Hungarian Forint",
+      "Bahamian Dollar",
+      "Russian Ruble",
+      "South African Rand",
+      "Turkish lira",
+      "Libyan Dinar",
+      "Bermuda Dollar",
+      "Brazilian Real",
+      "Czech Koruna",
+      "Indonesian Rupiah",
+      "Mexican Peso",
+      "Malaysian Ringgit",
+      "Israeli Shekel",
+      "New Taiwan dollar",
+      "Colombian Peso",
+      "Aruban Florin",
+      "Lebanese pound",
+      "Botswana pula",
+      "Netherlands Antillean Guilder",
+      "Fijian Dollar",
+      "Cape Verdean Escudo",
+      "Bulgarian Lev",
+      "St. Helena Pound",
+    ];
+
+    currencies.forEach((curr) => {
+      const opt = document.createElement("option");
+      opt.value = curr;
+      opt.textContent = curr;
+      currencySelect.appendChild(opt);
+    });
+
+    currencySearch.addEventListener("input", () => {
+      const term = currencySearch.value.toLowerCase();
+      [...currencySelect.options].forEach((opt) => {
+        opt.hidden = !opt.value.toLowerCase().includes(term);
+      });
+    });
+
+    let stones = JSON.parse(localStorage.getItem("stones")) || [];
 
     function renderStones() {
-      gallery.innerHTML = '';
-      stones.forEach(stone => {
-        const card = document.createElement('div');
-        card.className = 'card';
+      gallery.innerHTML = "";
+      stones.forEach((stone, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
         card.innerHTML = `
           <img src="${stone.image}" alt="${stone.name}" />
           <h2>${stone.name}</h2>
           <p>${stone.desc}</p>
+          <span><strong>Price:</strong> ${stone.price} ${stone.currency}</span>
+          <div class="seller-email">
+            <strong>Contact Seller: </strong>
+            <a href="mailto:${stone.email}" title="Send email to seller">${stone.email}</a>
+          </div>
         `;
         gallery.appendChild(card);
       });
     }
 
-    form.addEventListener('submit', (e) => {
+    function fakeModeration(imageData) {
+      // Simulate inappropriate content detection (demo only)
+      return !imageData.includes("inappropriate");
+    }
+
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const image = document.getElementById('image').value;
-      const desc = document.getElementById('desc').value;
-      stones.push({ name, image, desc });
-      localStorage.setItem('stones', JSON.stringify(stones));
-      form.reset();
-      renderStones();
+      const name = document.getElementById("name").value.trim();
+      const file = document.getElementById("imageFile").files[0];
+      const desc = document.getElementById("desc").value.trim();
+      const price = document.getElementById("price").value.trim();
+      const emailName = document.getElementById("emailName").value.trim();
+      const emailDomain = document.getElementById("emailDomain").value;
+      const currency = document.getElementById("currency").value || "United States Dollar";
+
+      if (!emailName) {
+        alert("Please enter your email username.");
+        return;
+      }
+
+      const fullEmail = emailName + emailDomain;
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        loading.style.display = "block";
+        form.style.display = "none";
+        errorMsg.style.display = "none";
+
+        setTimeout(() => {
+          loading.style.display = "none";
+          form.style.display = "block";
+
+          if (!fakeModeration(reader.result)) {
+            errorMsg.style.display = "block";
+            return;
+          }
+
+          stones.push({
+            name,
+            image: reader.result,
+            desc,
+            price,
+            currency,
+            email: fullEmail,
+          });
+          localStorage.setItem("stones", JSON.stringify(stones));
+          form.reset();
+          renderStones();
+        }, 4000); // Simulated moderation delay
+      };
+
+      if (file) reader.readAsDataURL(file);
     });
 
     renderStones();
